@@ -1,21 +1,40 @@
 import cv2
 import numpy as np
 
-img=cv2.imread("bozuk_paralar_3.jpg")
-img=cv2.resize(img,(640,480))
-gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-blur=cv2.medianBlur(gray,5)
+# Görüntüyü oku ve yeniden boyutlandır
+img = cv2.imread("bozuk_paralar_3.jpg")  # Dosya adını yüklediğin görsele göre güncelle
+img = cv2.resize(img, (512, 512))
+output = img.copy()
 
-circle=cv2.HoughCircles(blur,cv2.HOUGH_GRADIENT,1,img.shape[0]/5,param1=130,param2=25,minRadius=4,maxRadius=80)
-#img.shape[0]/6
-if circle is not None:
-    circle=np.uint16(np.around(circle))
-    for i in circle[0,:]:
-        cv2.circle(img,(i[0],i[1]),i[2],(0,0,255),3)
+# Griye çevir ve bulanıklaştır
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+blur = cv2.medianBlur(gray, 11)
 
-cv2.putText(img, f'{circle.shape[1]} tane daire var', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+# Daireleri Hough Circle yöntemi ile bul
+circles = cv2.HoughCircles(
+    blur,
+    cv2.HOUGH_GRADIENT,
+    dp=1,
+    minDist=50,
+    param1=100,
+    param2=30,
+    minRadius=30,
+    maxRadius=90
+)
 
-cv2.imshow("bozuk_paralar",img)    # .shape[1] ===> sayıyı verir
-# cv2.imshow("blur",blur)    
+# Daire varsa çiz
+if circles is not None:
+    circles = np.uint16(np.around(circles))
+    for i in circles[0, :]:
+        center = (i[0], i[1])
+        radius = i[2]
+        cv2.circle(output, center, radius, (0, 0, 255), 3)
+
+    # Daire sayısını yazdır
+    cv2.putText(output, f"{len(circles[0])} tane daire var", (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+
+# Sonuçları göster
+cv2.imshow("Tespit Edilen Paralar (Dairelerle)", output)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
