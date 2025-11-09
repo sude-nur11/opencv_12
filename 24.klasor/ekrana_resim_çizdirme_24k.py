@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from collections import deque  # Sabit uzunlukta liste yapısı
-#bu kısıma noktalar eklenicek bu yüzden kullandık
+#bu kısıma noktalar eklenicek bu yüzden kullandıkkkkkk
 
 # Kamerayı aç 
 cap = cv2.VideoCapture(0)
