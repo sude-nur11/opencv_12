@@ -45,3 +45,5 @@ for c in cnts:
 cv2.imshow("Şekil Algılama", image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+"ben sude gfeliyorummmmmm"
