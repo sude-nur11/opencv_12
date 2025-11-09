@@ -1,7 +1,7 @@
 import cv2 
 import numpy as np
 
-# trackbar yapicagimiz için boş fonksiyon üretilim
+# trackbar yapicagimiz için boş fonksiyon üretilim nvhdsfkjvbhefkşghrd
 def bos(x):
     pass
 cap=cv2.VideoCapture(0)
