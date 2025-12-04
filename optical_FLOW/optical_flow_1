@@ -1,0 +1,64 @@
+# Bu kod, web kamerasından aldığı görüntülerde ardışık kareler arasındaki belirgin 
+# noktaların hareketini takip etmek (Optik Akış) ve görselleştirmek için OpenCV 
+# ve Lucas-Kanade algoritmasını kullanır.
+
+import cv2  
+import numpy as np  
+# Köşe tespiti parametreleri 
+corner_track_params=dict(maxCorners=100,     # Maksimum köşe sayısı
+                         qualityLevel=0.3,    # Kalite eşiği
+                         minDistance=7,     # Minimum köşe mesafesi
+                         blockSize=7)        
+
+# Optik Akış parametreleri 
+lk_params=dict(winSize=(200,200),             # Takip pencere boyutu
+               maxLevel=2,                    # Piramit seviyesi
+               criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)) # Durma kriterleri
+
+cap=cv2.VideoCapture(0)
+ret,prev_frame=cap.read() 
+prev_gray=cv2.cvtColor(prev_frame,cv2.COLOR_BGR2GRAY) 
+
+# İlk karede takip noktalarını (köşeleri) bul
+prevPts=cv2.goodFeaturesToTrack(prev_gray,mask=None,**corner_track_params) 
+
+mask=np.zeros_like(prev_frame) # Çizgiler için boş maske oluştur
+
+while True:
+    ret,frame=cap.read() # Yeni kareyi oku
+    if not ret:
+        break
+        
+    frame_gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY) # Yeni kareyi gri 
+    
+    # Optik akışı hesapla (Noktaların yeni konumlarını bul)
+    nextPts,status,err=cv2.calcOpticalFlowPyrLK(prev_gray,frame_gray,prevPts,None,**lk_params)
+    
+    # Başarıyla takip edilen noktaları filtrele
+    good_new=nextPts[status==1]
+    good_prev=prevPts[status==1]
+
+    # Çizgileri ve daireleri çiz
+    for new,prev in zip(good_new,good_prev):
+        x_new,y_new=new.ravel() # Yeni konum
+        x_prev,y_prev=prev.ravel() # Eski konum
+
+        # Maske üzerine akış çizgisini çiz
+        mask=cv2.line(mask,(int(x_prev),int(y_prev)),(int(x_new),int(y_new)),(0,255,0),3)
+        
+        # Yeni konuma daire çiz
+        frame=cv2.circle(frame,(int(x_new),int(y_new)),8,(0,0,255),-1)
+        
+    img=cv2.add(frame,mask) # Kare ve maskeyi birleştir
+    cv2.imshow('frame',img) 
+
+    k=cv2.waitKey(30) & 0xFF 
+    if k==27:         
+        break
+        
+    # Yeni kare ve noktaları sonraki döngü için hazırla
+    prev_gray=frame_gray.copy()
+    prevPts=good_new.reshape(-1,1,2)
+
+cap.release() 
+cv2.destroyAllWindows() 
